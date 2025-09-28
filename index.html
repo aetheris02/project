@@ -1,132 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🪐 Universe Explorer – by vaghela deepak</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🪐 Universe Explorer – project</title>
   <style>
     :root{
       --bg1:#0b0f2a; --bg2:#050713; --neon:#7df9ff; --accent:#ff73fa; --gold:#ffd166; --danger:#ff476f; --ok:#56ffa3;
     }
-    html,body{height:100%;}
+    html,body{height:100%; margin:0;}
     body{
-      margin:0; background:radial-gradient(1200px 800px at 50% 30%, #141a47, var(--bg2)) fixed; color:#e8ecff; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background:radial-gradient(1200px 800px at 50% 30%, #141a47, var(--bg2)) fixed;
+      color:#e8ecff; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
       overflow:hidden;
     }
+
     /* HUD */
     .hud{position:fixed; inset:16px auto auto 16px; z-index:5; display:flex; gap:12px; align-items:center;}
-    .badge{border:2px solid var(--neon); color:var(--neon); padding:10px 14px; border-radius:12px; backdrop-filter: blur(6px); background:rgba(5,10,30,.35); box-shadow:0 0 18px rgba(125,249,255,.2) inset, 0 0 10px rgba(125,249,255,.25);
-      text-shadow:0 0 6px rgba(125,249,255,.6); font-weight:700; letter-spacing:.5px;}
-    .controls{position:fixed; right:16px; top:16px; z-index:5; border:2px solid #6b7cff; color:#cfd6ff; border-radius:12px; padding:10px 14px; background:rgba(10,12,30,.4); backdrop-filter: blur(6px); max-width:320px;}
+    .badge{border:2px solid var(--neon); color:var(--neon); padding:10px 14px; border-radius:12px; backdrop-filter: blur(6px); background:rgba(5,10,30,.35);
+      box-shadow:0 0 18px rgba(125,249,255,.2) inset, 0 0 10px rgba(125,249,255,.25);
+      text-shadow:0 0 6px rgba(125,249,255,.6); font-weight:700; letter-spacing:.5px;
+    }
+
+    /* Control guide (auto-hide after intro) */
+    .controls{position:fixed; right:16px; top:16px; z-index:5; border:2px solid #6b7cff; color:#cfd6ff; border-radius:12px; padding:10px 14px;
+      background:rgba(10,12,30,.4); backdrop-filter: blur(6px); max-width:320px; transition:opacity .6s ease, transform .6s ease;
+    }
+    .controls.hidden{opacity:0; transform: translateY(-8px); pointer-events:none; }
+
     .controls b{color:#fff}
     .controls kbd{border:1px solid #8492ff; border-bottom-width:3px; padding:1px 6px; border-radius:6px; font-weight:700;}
 
     /* Viewport & Universe */
     #viewport{position:relative; width:100vw; height:100vh; overflow:hidden;}
-    #universe{position:absolute; width:4200px; height:2600px; transform: translate(0,0); will-change: transform;}
+    #universe{position:absolute; width:4200px; height:2600px; transform:translate(0,0); will-change:transform;}
 
-    /* Starfield layers for parallax */
+    /* Stars (parallax layers) */
     .stars, .stars2, .stars3{position:absolute; inset:0; background-repeat:repeat;}
     .stars{background-image: radial-gradient(2px 2px at 20px 20px, #fff, rgba(255,255,255,.3) 60%, transparent 61%),
-                               radial-gradient(1px 1px at 60px 80px, #eef, transparent 60%),
-                               radial-gradient(1.5px 1.5px at 120px 40px, #cfe, transparent 60%);
-           background-size: 200px 200px, 240px 240px, 260px 260px; opacity:.55;}
+                          radial-gradient(1px 1px at 60px 80px, #eef, transparent 60%),
+                          radial-gradient(1.5px 1.5px at 120px 40px, #cfe, transparent 60%);
+           background-size:200px 200px,240px 240px,260px 260px; opacity:.55;}
     .stars2{background-image: radial-gradient(1.5px 1.5px at 90px 50px, #fff, transparent 60%),
-                               radial-gradient(1px 1px at 140px 170px, #bff, transparent 60%),
-                               radial-gradient(1px 1px at 10px 110px, #ffd, transparent 60%);
-            background-size: 320px 320px, 400px 400px, 360px 360px; opacity:.35;}
+                          radial-gradient(1px 1px at 140px 170px, #bff, transparent 60%),
+                          radial-gradient(1px 1px at 10px 110px, #ffd, transparent 60%);
+           background-size:320px 320px,400px 400px,360px 360px; opacity:.35;}
     .stars3{background-image: radial-gradient(1px 1px at 70px 90px, #fff, transparent 60%),
-                               radial-gradient(0.8px 0.8px at 200px 200px, #cff, transparent 60%);
-            background-size: 500px 500px, 520px 520px; opacity:.2;}
+                          radial-gradient(0.8px 0.8px at 200px 200px, #cff, transparent 60%);
+           background-size:500px 500px,520px 520px; opacity:.2;}
 
     /* Planet styling */
-    .planet{position:absolute; width:140px; height:140px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#000; font-weight:900; letter-spacing:.5px; text-shadow:0 1px 0 rgba(255,255,255,.7);
-      box-shadow: inset 8px -12px 28px rgba(0,0,0,.55), 0 0 40px rgba(255,255,255,.12); border:2px solid rgba(255,255,255,.3); user-select:none; cursor:pointer; transform: translateZ(0);
-      transition: transform .2s ease, box-shadow .2s ease;
+    .planet{position:absolute; width:140px; height:140px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#000; font-weight:900; letter-spacing:.5px;
+      text-shadow:0 1px 0 rgba(255,255,255,.7); box-shadow: inset 8px -12px 28px rgba(0,0,0,.55), 0 0 40px rgba(255,255,255,.12);
+      border:2px solid rgba(255,255,255,.3); user-select:none; cursor:pointer; transform: translateZ(0); transition: transform .18s ease, box-shadow .18s ease;
     }
-    .planet:hover{transform: scale(1.07); box-shadow: inset 10px -15px 38px rgba(0,0,0,.65), 0 0 70px rgba(125,249,255,.25)}
+    .planet:hover{transform: scale(1.06); box-shadow: inset 10px -15px 38px rgba(0,0,0,.65), 0 0 70px rgba(125,249,255,.18);}
     .ring::after{content:""; position:absolute; width:220px; height:60px; border:4px solid rgba(255,255,255,.4); border-radius:50%; transform: rotate(20deg); box-shadow:0 0 20px rgba(255,255,255,.25) inset;}
 
-    /* Specific colorways */
     .sun{background: radial-gradient(circle at 35% 30%, #fff3a0, #ffcc00 35%, #ff8800 60%, #b63a00 100%); box-shadow:0 0 60px #ffb300, 0 0 160px #ff7b00;}
-    .mercury{background: radial-gradient(circle at 30% 30%, #e6e6e6, #b9b9b9 45%, #7d7d7d 80%);} 
-    .venus{background: radial-gradient(circle at 30% 30%, #fff0c1, #e8b86c 45%, #9f6421 80%);} 
-    .earth{background: radial-gradient(circle at 40% 30%, #8ddbff, #2466e2 55%, #0b3a99 80%), radial-gradient(circle at 65% 70%, #2db34a, #136a2b 60%, transparent 61%);} 
-    .mars{background: radial-gradient(circle at 40% 30%, #ffb07b, #e46b3b 55%, #8a2a00 85%);} 
-    .jupiter{background: repeating-linear-gradient(15deg, #e9d7ba 0 16px, #c7a983 16px 34px, #b3845f 34px 46px, #8e6847 46px 62px);} 
-    .saturn{background: repeating-linear-gradient(20deg, #f1e4c8 0 18px, #d9c19a 18px 36px, #b58f62 36px 50px);} 
-    .uranus{background: radial-gradient(circle at 40% 30%, #c6f6ff, #7fd6e8 55%, #3b96ad 80%);} 
-    .neptune{background: radial-gradient(circle at 40% 30%, #b3ccff, #5c7bff 55%, #2744a6 85%);} 
-    .pluto{background: radial-gradient(circle at 40% 30%, #e3d8cf, #b8a79a 55%, #7e6a5a 85%);} 
+    .mercury{background: radial-gradient(circle at 30% 30%, #e6e6e6, #b9b9b9 45%, #7d7d7d 80%);}
+    .venus{background: radial-gradient(circle at 30% 30%, #fff0c1, #e8b86c 45%, #9f6421 80%);}
+    .earth{background: radial-gradient(circle at 40% 30%, #8ddbff, #2466e2 55%, #0b3a99 80%), radial-gradient(circle at 65% 70%, #2db34a, #136a2b 60%, transparent 61%);}
+    .mars{background: radial-gradient(circle at 40% 30%, #ffb07b, #e46b3b 55%, #8a2a00 85%);}
+    .jupiter{background: repeating-linear-gradient(15deg, #e9d7ba 0 16px, #c7a983 16px 34px, #b3845f 34px 46px, #8e6847 46px 62px);}
+    .saturn{background: repeating-linear-gradient(20deg, #f1e4c8 0 18px, #d9c19a 18px 36px, #b58f62 36px 50px);}
+    .uranus{background: radial-gradient(circle at 40% 30%, #c6f6ff, #7fd6e8 55%, #3b96ad 80%);}
+    .neptune{background: radial-gradient(circle at 40% 30%, #b3ccff, #5c7bff 55%, #2744a6 85%);}
+    .pluto{background: radial-gradient(circle at 40% 30%, #e3d8cf, #b8a79a 55%, #7e6a5a 85%);}
 
     /* Ship */
-    #ship{position:absolute; width:40px; height:40px; transform: translate(-20px,-20px); pointer-events:none;}
+    #ship{position:absolute; width:40px; height:40px; transform: translate(-20px,-20px); pointer-events:none; z-index:4;}
     #ship svg{filter: drop-shadow(0 0 6px rgba(125,249,255,.6));}
 
-    /* Dock prompt */
+    /* Prompt */
     #prompt{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:6; display:none; padding:10px 14px; border:2px solid var(--gold); background:rgba(15,10,40,.7); border-radius:12px; color:#fff;}
 
     /* Modal */
     #modal{position:fixed; inset:0; background:rgba(3,5,18,.72); display:none; align-items:center; justify-content:center; z-index:10;}
-    .card{width:min(780px, 92vw); border:2px solid var(--neon); border-radius:18px; padding:18px; background:linear-gradient(180deg, rgba(10,20,50,.7), rgba(8,12,30,.9)); color:#dff8ff; box-shadow:0 0 20px rgba(125,249,255,.18), inset 0 0 22px rgba(125,249,255,.12);} 
-    .card h2{margin:.2rem 0 0.8rem; font-size:1.6rem; color:#fff; text-shadow:0 0 10px rgba(125,249,255,.6);} 
+    .card{width:min(780px,92vw); max-height:90vh; overflow-y:auto; border:2px solid var(--neon); border-radius:18px; padding:18px;
+      background:linear-gradient(180deg, rgba(10,20,50,.7), rgba(8,12,30,.9)); color:#dff8ff; box-shadow:0 0 20px rgba(125,249,255,.18), inset 0 0 22px rgba(125,249,255,.12);
+    }
+    .card h2{margin:.2rem 0 .8rem; font-size:1.6rem; color:#fff; text-shadow:0 0 10px rgba(125,249,255,.6);}
     .facts{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
     .facts div{padding:10px; background:rgba(255,255,255,.06); border:1px dashed rgba(255,255,255,.18); border-radius:12px;}
     .close{float:right; border:2px solid var(--danger); color:#fff; background:rgba(255,71,111,.12); padding:6px 10px; border-radius:10px; cursor:pointer;}
-    .scan{border:2px solid var(--ok); color:#fff; background:rgba(86,255,163,.12); padding:8px 12px; border-radius:10px; cursor:pointer;}
+    .scan{border:2px solid var(--ok); color:#fff; background:rgba(86,255,163,.12); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700;}
 
     /* Minimap */
     #minimapWrap{position:fixed; right:16px; bottom:16px; z-index:5; border:2px solid #6b7cff; padding:8px; background:rgba(10,12,30,.45); border-radius:12px;}
-    #minimap{width:220px; height:130px; display:block;}
+    #minimap{width:220px; height:130px; display:block; background:#07091a; border-radius:8px;}
 
-    /* Title splash */
-    .splash{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:11; background:radial-gradient(800px 600px at 50% 40%, rgba(20,25,70,.95), rgba(5,7,19,.96)); animation: fadeOut 1.6s ease 2.2s forwards;}
-    .splash h1{font-size:clamp(24px, 6vw, 54px); color:#fff; text-align:center; text-shadow:0 0 16px rgba(125,249,255,.6), 0 0 40px rgba(255,115,250,.35);} 
-    .splash p{color:#b6c8ff; text-align:center; margin-top:8px}
+    /* Splash */
+    .splash{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:11; background:radial-gradient(800px 600px at 50% 40%, rgba(20,25,70,.95), rgba(5,7,19,.96));
+      animation: fadeOut 1.6s ease 2.2s forwards;
+    }
+    .splash h1{font-size:clamp(24px,6vw,54px); color:#fff; text-align:center; text-shadow:0 0 16px rgba(125,249,255,.6), 0 0 40px rgba(255,115,250,.35);}
+    .splash p{color:#b6c8ff; text-align:center; margin-top:8px;}
     @keyframes fadeOut{to{opacity:0; visibility:hidden;}}
+
+    /* Mobile joystick */
+    #joystick{ position:fixed; left:20px; bottom:20px; width:120px; height:120px; border:2px solid rgba(125,249,255,.28); border-radius:50%;
+      background:rgba(20,30,60,.32); backdrop-filter:blur(6px); touch-action:none; z-index:20;
+    }
+    #stick{ width:60px; height:60px; background:rgba(125,249,255,.6); border-radius:50%; position:absolute; left:30px; top:30px; transition:left .06s, top .06s; }
+    /* smaller screens tweak */
+    @media (max-width:480px){
+      .controls{max-width:86vw; right:8px; top:8px; padding:8px;}
+      #minimap{width:160px;height:96px;}
+      #joystick{left:12px; bottom:12px; width:100px; height:100px;}
+      #stick{width:50px;height:50px; left:25px; top:25px;}
+    }
   </style>
 </head>
 <body>
-  <div class="splash">
-    <div>
+  <!-- Splash / Intro -->
+  <div class="splash" id="splash">
+    <div style="text-align:center;">
       <h1>🪐 Universe Explorer<br><small style="font-size:.55em; color:#9fe9ff">by vaghela deepak</small></h1>
-      <p>Use <b>W/A/S/D</b> or <b>Arrow Keys</b> to fly • Press <b>E</b> to Explore planets</p>
+      <p>Use <b>W/A/S/D</b> or <b>Arrow Keys</b> to fly • Press <b>E</b> or Tap planets</p>
     </div>
   </div>
 
+  <!-- HUD -->
   <div class="hud">
     <div class="badge">⭐ Knowledge: <span id="xp">0</span></div>
     <div class="badge">🔎 Scanned: <span id="scanned">0</span>/9</div>
   </div>
-  <div class="controls">
+
+  <!-- Control guide (will disappear after intro) -->
+  <div class="controls" id="controlGuide">
     <div style="font-weight:700; margin-bottom:6px; color:#fff">Controls</div>
     <div>Move: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></div>
-    <div>Explore (near planet): <kbd>E</kbd></div>
-   
+    <div style="margin-top:6px">Explore (near planet): <kbd>E</kbd> or <b>Tap a planet</b></div>
   </div>
 
+  <!-- Viewport & Universe -->
   <div id="viewport">
     <div id="universe">
       <div class="stars"></div>
       <div class="stars2"></div>
       <div class="stars3"></div>
 
-      <!-- Planets (positions within the 4200x2600 space) -->
-      <div class="planet sun" style="left:200px; top:1200px" data-name="Sun" data-facts='{"Type":"Star (G-type)","Surface Temp":"~5,500°C","Fun":"Holds 99.8% of Solar System mass"}'></div>
-      <div class="planet mercury" style="left:700px; top:1350px; width:80px; height:80px" data-name="Mercury" data-facts='{"Day Length":"59 Earth days","Temp Range":"-180°C to 430°C","Fun":"Smallest planet"}'></div>
-      <div class="planet venus" style="left:1000px; top:1100px; width:120px; height:120px" data-name="Venus" data-facts='{"Atmosphere":"CO₂ + sulfuric acid","Surface":"Hottest planet","Fun":"Rotates backwards"}'></div>
-      <div class="planet earth" style="left:1400px; top:1500px; width:120px; height:120px" data-name="Earth" data-facts='{"Moons":"1 (the Moon)","Water":"~71% surface","Fun":"Home sweet home"}'></div>
-      <div class="planet mars" style="left:1900px; top:900px; width:110px; height:110px" data-name="Mars" data-facts='{"Nickname":"The Red Planet","Moons":"Phobos & Deimos","Fun":"Olympus Mons is tallest volcano"}'></div>
-      <div class="planet jupiter" style="left:2300px; top:1700px; width:220px; height:220px" data-name="Jupiter" data-facts='{"Size":"Largest planet","Storm":"Great Red Spot","Fun":"At least 95 moons"}'></div>
-      <div class="planet saturn ring" style="left:2800px; top:1200px; width:200px; height:200px" data-name="Saturn" data-facts='{"Rings":"Mostly ice & rock","Density":"Less than water","Fun":"Could float in a huge ocean"}'></div>
-      <div class="planet uranus" style="left:3300px; top:700px; width:160px; height:160px" data-name="Uranus" data-facts='{"Tilt":"98° (rolls on side)","Color":"Methane gives blue","Fun":"Coldest atmosphere"}'></div>
-      <div class="planet neptune" style="left:3700px; top:2000px; width:160px; height:160px" data-name="Neptune" data-facts='{"Winds":">2,000 km/h","Color":"Deep blue","Fun":"Farthest giant"}'></div>
-      <!-- Pluto as bonus -->
-      <div class="planet pluto" style="left:4000px; top:400px; width:90px; height:90px" data-name="Pluto" data-facts='{"Status":"Dwarf planet","Heart":"Tombaugh Regio","Fun":"Orbits in a tilted ellipse"}'></div>
+      <!-- Planets (all included) -->
+      <div class="planet sun" style="left:200px; top:1200px;" data-name="Sun" data-facts='{"Type":"Star (G-type)","Surface Temp":"~5,500°C","Fun":"Holds 99.8% of Solar System mass"}'></div>
+
+      <div class="planet mercury" style="left:700px; top:1350px; width:80px; height:80px;" data-name="Mercury" data-facts='{"Day Length":"59 Earth days","Temp Range":"-180°C to 430°C","Fun":"Smallest planet"}'></div>
+
+      <div class="planet venus" style="left:1000px; top:1100px; width:120px; height:120px;" data-name="Venus" data-facts='{"Atmosphere":"CO₂ + sulfuric acid","Surface":"Hottest planet","Fun":"Rotates backwards"}'></div>
+
+      <div class="planet earth" style="left:1400px; top:1500px; width:120px; height:120px;" data-name="Earth" data-facts='{"Moons":"1 (the Moon)","Water":"~71% surface","Fun":"Home sweet home"}'></div>
+
+      <div class="planet mars" style="left:1900px; top:900px; width:110px; height:110px;" data-name="Mars" data-facts='{"Nickname":"The Red Planet","Moons":"Phobos & Deimos","Fun":"Olympus Mons is tallest volcano"}'></div>
+
+      <div class="planet jupiter" style="left:2300px; top:1700px; width:220px; height:220px;" data-name="Jupiter" data-facts='{"Size":"Largest planet","Storm":"Great Red Spot","Fun":"At least 95 moons"}'></div>
+
+      <div class="planet saturn ring" style="left:2800px; top:1200px; width:200px; height:200px;" data-name="Saturn" data-facts='{"Rings":"Mostly ice & rock","Density":"Less than water","Fun":"Could float in a huge ocean"}'></div>
+
+      <div class="planet uranus" style="left:3300px; top:700px; width:160px; height:160px;" data-name="Uranus" data-facts='{"Tilt":"98° (rolls on side)","Color":"Methane gives blue","Fun":"Coldest atmosphere"}'></div>
+
+      <div class="planet neptune" style="left:3700px; top:2000px; width:160px; height:160px;" data-name="Neptune" data-facts='{"Winds":">2,000 km/h","Color":"Deep blue","Fun":"Farthest giant"}'></div>
+
+      <div class="planet pluto" style="left:4000px; top:400px; width:90px; height:90px;" data-name="Pluto" data-facts='{"Status":"Dwarf planet","Heart":"Tombaugh Regio","Fun":"Orbits in a tilted ellipse"}'></div>
 
       <!-- Ship -->
-      <div id="ship">
-        <svg viewBox="0 0 64 64">
+      <div id="ship" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="40" height="40" role="img" aria-hidden="true">
           <defs>
             <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#7df9ff"/>
@@ -138,124 +176,186 @@
           <polygon id="flame" points="32,52 26,44 38,44" fill="#ffb347" />
         </svg>
       </div>
+
     </div>
   </div>
 
+  <!-- Prompt (when near a planet) -->
   <div id="prompt">Press <b>E</b> to Explore <span id="pname"></span></div>
 
-  <div id="modal">
-    <div class="card">
+  <!-- Modal -->
+  <div id="modal" aria-hidden="true">
+    <div class="card" role="dialog" aria-modal="true">
       <button class="close" id="closeModal">✕ Close</button>
       <h2 id="modalTitle">Planet</h2>
       <div class="facts" id="facts"></div>
       <div style="margin-top:12px; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap">
         <button class="scan" id="scanBtn">Scan & +10 Knowledge</button>
-        <small style="opacity:.9">Tip: You can keep exploring – try to find all planets!</small>
+        <small style="opacity:.9">Tip: Explore all planets!</small>
       </div>
     </div>
   </div>
 
-  <div id="minimapWrap">
-    <canvas id="minimap" width="220" height="130"></canvas>
-  </div>
+  <!-- Minimap -->
+  <div id="minimapWrap"><canvas id="minimap" width="220" height="130"></canvas></div>
+
+  <!-- Mobile joystick -->
+  <div id="joystick"><div id="stick"></div></div>
 
   <script>
-    // --- Game State ---
+    /* ---------- State ---------- */
     const viewport = document.getElementById('viewport');
     const universe = document.getElementById('universe');
     const ship = document.getElementById('ship');
     const promptBox = document.getElementById('prompt');
     const pname = document.getElementById('pname');
-
     const xpEl = document.getElementById('xp');
     const scannedEl = document.getElementById('scanned');
+    const modal = document.getElementById('modal');
+    const factsBox = document.getElementById('facts');
+    const modalTitle = document.getElementById('modalTitle');
+    const closeModal = document.getElementById('closeModal');
+    const scanBtn = document.getElementById('scanBtn');
+    const controlGuide = document.getElementById('controlGuide');
+    const splash = document.getElementById('splash');
 
     const planets = Array.from(document.querySelectorAll('.planet')).map(el=>({
       el,
       name: el.dataset.name,
-      facts: JSON.parse(el.dataset.facts||'{}'),
-      scanned:false
+      facts: JSON.parse(el.dataset.facts || '{}'),
+      scanned: false
     }));
 
     const world = { w: 4200, h: 2600 };
-    let pos = { x: 300, y: 1300 }; // ship world position
-    let speed = { x: 0, y: 0 };
-    const maxSpeed = 7;
-    const accel = 0.6;
+
+    let pos = { x: 2100, y: 1300 }; // ship world position
+    let vel = { x: 0, y: 0 };
+    const maxSpeed = 8;
+    const accel = 0.7;
     const friction = 0.88;
 
     let keys = {};
-    window.addEventListener('keydown', e=>{ keys[e.key.toLowerCase()] = true; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();});
-    window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false;});
-
-    // Center camera on ship
-    function centerCamera(){
-      const vx = (viewport.clientWidth/2) - pos.x;
-      const vy = (viewport.clientHeight/2) - pos.y;
-      universe.style.transform = `translate(${vx}px, ${vy}px)`;
-      // Parallax star layers
-      const p1 = 0.5, p2 = 0.3, p3 = 0.15;
-      universe.querySelector('.stars').style.transform = `translate(${vx*p1}px, ${vy*p1}px)`;
-      universe.querySelector('.stars2').style.transform = `translate(${vx*p2}px, ${vy*p2}px)`;
-      universe.querySelector('.stars3').style.transform = `translate(${vx*p3}px, ${vy*p3}px)`;
-    }
-
-    // Update ship flame flicker
-    const flame = document.getElementById('flame');
-    function updateFlame(){
-      const flick = (Math.random()*8+44).toFixed(0);
-      flame.setAttribute('points', `32,52 26,${flick} 38,${flick}`);
-    }
-
-    // Movement loop
-    function loop(){
-      // Inputs
-      const up = keys['w']||keys['arrowup'];
-      const down = keys['s']||keys['arrowdown'];
-      const left = keys['a']||keys['arrowleft'];
-      const right = keys['d']||keys['arrowright'];
-
-      if(up) speed.y -= accel;
-      if(down) speed.y += accel;
-      if(left) speed.x -= accel;
-      if(right) speed.x += accel;
-
-      // Clamp speed
-      speed.x = Math.max(-maxSpeed, Math.min(maxSpeed, speed.x));
-      speed.y = Math.max(-maxSpeed, Math.min(maxSpeed, speed.y));
-      // Friction
-      speed.x *= friction; speed.y *= friction;
-
-      pos.x += speed.x; pos.y += speed.y;
-      // Bounds
-      pos.x = Math.max(20, Math.min(world.w-20, pos.x));
-      pos.y = Math.max(20, Math.min(world.h-20, pos.y));
-
-      ship.style.left = pos.x + 'px';
-      ship.style.top = pos.y + 'px';
-
-      centerCamera();
-      updateFlame();
-      checkProximity();
-      drawMinimap();
-      requestAnimationFrame(loop);
-    }
-
-    // Proximity prompt logic
+    let joystickInput = { x:0, y:0 };
     let nearPlanet = null;
-    function rect(el){ const r = el.getBoundingClientRect(); return {x:r.left, y:r.top, w:r.width, h:r.height}; }
-    function worldPos(el){ // compute center in world coords
-      const styleLeft = parseFloat(el.style.left); const styleTop = parseFloat(el.style.top);
-      const w = el.offsetWidth, h = el.offsetHeight;
-      return {x: styleLeft + w/2, y: styleTop + h/2, r: Math.max(w,h)/2};
+    let activePlanet = null;
+    let xp = 0, scannedCount = 0;
+
+    /* ---------- Input ---------- */
+    window.addEventListener('keydown', e => {
+      keys[e.key.toLowerCase()] = true;
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+    });
+    window.addEventListener('keyup', e => {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    // Click / tap a planet to open modal immediately
+    planets.forEach(p => {
+      // open modal on both click and touchstart for mobile
+      const open = (ev) => {
+        ev.stopPropagation();
+        openModal(p);
+      };
+      p.el.addEventListener('click', open);
+      p.el.addEventListener('touchstart', open, {passive:true});
+    });
+
+    // Modal controls
+    function openModal(p){
+      activePlanet = p;
+      modalTitle.textContent = p.name;
+      factsBox.innerHTML = '';
+      Object.entries(p.facts).forEach(([k,v])=>{
+        const div = document.createElement('div');
+        div.innerHTML = `<b>${k}:</b> ${v}`;
+        factsBox.appendChild(div);
+      });
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden','false');
+      document.body.style.overflow = 'hidden';
     }
-    function dist(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.hypot(dx,dy); }
+    function closeModalFn(){
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      activePlanet = null;
+    }
+    closeModal.addEventListener('click', closeModalFn);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModalFn(); });
+
+    scanBtn.addEventListener('click', ()=>{
+      if(!activePlanet) return;
+      if(!activePlanet.scanned){
+        activePlanet.scanned = true;
+        xp += 10;
+        scannedCount++;
+        xpEl.textContent = xp;
+        scannedEl.textContent = scannedCount;
+        scanBtn.textContent = 'Scanned ✔ +10';
+        setTimeout(()=> scanBtn.textContent = 'Scan & +10 Knowledge', 1200);
+      } else {
+        scanBtn.textContent = 'Already scanned';
+        setTimeout(()=> scanBtn.textContent = 'Scan & +10 Knowledge', 900);
+      }
+    });
+
+    // E key to open modal if near planet
+    window.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase() === 'e' && nearPlanet){
+        openModal(nearPlanet);
+      }
+    });
+
+    /* ---------- Joystick (mobile) ---------- */
+    const joystick = document.getElementById('joystick');
+    const stick = document.getElementById('stick');
+    let joyActive = false;
+    joystick.addEventListener('touchstart', (e)=>{ joyActive = true; }, {passive:true});
+    joystick.addEventListener('touchend', (e)=>{
+      joyActive = false; joystickInput.x = 0; joystickInput.y = 0;
+      stick.style.left = '30px'; stick.style.top = '30px';
+    }, {passive:true});
+    joystick.addEventListener('touchmove', (e)=>{
+      if(!joyActive) return;
+      const rect = joystick.getBoundingClientRect();
+      const t = e.touches[0];
+      const x = t.clientX - rect.left - rect.width/2;
+      const y = t.clientY - rect.top - rect.height/2;
+      const max = rect.width/2 - 18;
+      const dist = Math.min(max, Math.hypot(x,y));
+      const ang = Math.atan2(y,x);
+      const nx = Math.cos(ang) * (dist/max);
+      const ny = Math.sin(ang) * (dist/max);
+      joystickInput.x = nx; joystickInput.y = ny;
+      stick.style.left = `${rect.width/2 - 30 + nx*30}px`;
+      stick.style.top  = `${rect.height/2 - 30 + ny*30}px`;
+      // do not block scrolling globally (passive not used), but prevent default so pointer stays
+      e.preventDefault();
+    }, {passive:false});
+
+    /* ---------- Movement + Render Loop ---------- */
+    function centerCamera(){
+      const vx = (window.innerWidth / 2) - pos.x;
+      const vy = (window.innerHeight / 2) - pos.y;
+      universe.style.transform = `translate(${vx}px, ${vy}px)`;
+      // parallax
+      universe.querySelector('.stars').style.transform = `translate(${vx * 0.5}px, ${vy * 0.5}px)`;
+      universe.querySelector('.stars2').style.transform = `translate(${vx * 0.3}px, ${vy * 0.3}px)`;
+      universe.querySelector('.stars3').style.transform = `translate(${vx * 0.15}px, ${vy * 0.15}px)`;
+    }
+
+    function worldPos(el){
+      const left = parseFloat(el.style.left) || 0;
+      const top  = parseFloat(el.style.top)  || 0;
+      const w = el.offsetWidth, h = el.offsetHeight;
+      return { x: left + w/2, y: top + h/2, r: Math.max(w,h)/2 };
+    }
 
     function checkProximity(){
       nearPlanet = null;
       for(const p of planets){
         const P = worldPos(p.el);
-        const d = dist(P, pos);
+        const d = Math.hypot(P.x - pos.x, P.y - pos.y);
         if(d < P.r + 90){
           nearPlanet = p;
           break;
@@ -269,110 +369,94 @@
       }
     }
 
-    // Modal + Scan
-    const modal = document.getElementById('modal');
-    const factsBox = document.getElementById('facts');
-    const modalTitle = document.getElementById('modalTitle');
-    const closeModal = document.getElementById('closeModal');
-    const scanBtn = document.getElementById('scanBtn');
+    // flame flicker
+    const flame = document.getElementById('flame');
+    function updateFlame(){ if(!flame) return; const flick = (Math.random()*8+44).toFixed(0); flame.setAttribute('points', `32,52 26,${flick} 38,${flick}`); }
 
-    function openModal(p){
-      modalTitle.textContent = p.name;
-      factsBox.innerHTML = '';
-      Object.entries(p.facts).forEach(([k,v])=>{
-        const div = document.createElement('div');
-        div.innerHTML = `<b>${k}:</b> ${v}`;
-        factsBox.appendChild(div);
-      });
-      modal.style.display = 'flex';
-      document.body.style.overflow='hidden';
-      activePlanet = p;
+    function loop(){
+      // keyboard
+      const up = keys['w'] || keys['arrowup'];
+      const down = keys['s'] || keys['arrowdown'];
+      const left = keys['a'] || keys['arrowleft'];
+      const right = keys['d'] || keys['arrowright'];
+
+      if(up) vel.y -= accel;
+      if(down) vel.y += accel;
+      if(left) vel.x -= accel;
+      if(right) vel.x += accel;
+
+      // joystick influence
+      if(Math.abs(joystickInput.x) > 0.03) vel.x += joystickInput.x * accel * 1.2;
+      if(Math.abs(joystickInput.y) > 0.03) vel.y += joystickInput.y * accel * 1.2;
+
+      // clamp
+      const speed = Math.hypot(vel.x, vel.y);
+      if(speed > maxSpeed){
+        vel.x = (vel.x / speed) * maxSpeed;
+        vel.y = (vel.y / speed) * maxSpeed;
+      }
+
+      // friction
+      vel.x *= friction; vel.y *= friction;
+
+      pos.x += vel.x; pos.y += vel.y;
+
+      // bounds
+      pos.x = Math.max(20, Math.min(world.w - 20, pos.x));
+      pos.y = Math.max(20, Math.min(world.h - 20, pos.y));
+
+      // update ship position (world coords)
+      ship.style.left = pos.x + 'px';
+      ship.style.top  = pos.y + 'px';
+
+      centerCamera();
+      updateFlame();
+      checkProximity();
+      drawMinimap();
+
+      requestAnimationFrame(loop);
     }
-    function close(){ modal.style.display='none'; document.body.style.overflow='hidden'; activePlanet=null; }
-    closeModal.addEventListener('click', close);
-    modal.addEventListener('click', (e)=>{ if(e.target===modal) close(); });
+    requestAnimationFrame(loop);
 
-    let xp = 0; let scanned = 0; let activePlanet = null;
-    scanBtn.addEventListener('click', ()=>{
-      if(activePlanet && !activePlanet.scanned){
-        activePlanet.scanned = true;
-        xp += 10; scanned += 1;
-        xpEl.textContent = xp; scannedEl.textContent = scanned;
-        // subtle flash effect
-        scanBtn.textContent = 'Scanned ✔ +10';
-        setTimeout(()=> scanBtn.textContent = 'Scan & +10 Knowledge', 1200);
-      }
-    });
-
-    // Keyboard actions
-    window.addEventListener('keydown', (e)=>{
-      if(e.key.toLowerCase()==='e' && nearPlanet){
-        openModal(nearPlanet);
-      }
-      if(e.key.toLowerCase()==='c') centerCamera();
-    });
-    // --- Mobile Touch Controls ---
-let dragging = false;
-
-document.addEventListener("touchstart", e => {
-  dragging = true;
-  moveShip(e.touches[0]);
-});
-
-document.addEventListener("touchmove", e => {
-  if (dragging) moveShip(e.touches[0]);
-});
-
-document.addEventListener("touchend", () => {
-  dragging = false;
-});
-
-function moveShip(touch) {
-  // Places the ship relative to the camera
-  ship.x = touch.clientX - canvas.width/2 + camera.x;
-  ship.y = touch.clientY - canvas.height/2 + camera.y;
-}
-
-
-    // Minimap
+    /* ---------- Minimap ---------- */
     const mm = document.getElementById('minimap');
-    const ctx = mm.getContext('2d');
+    const mmctx = mm.getContext('2d');
     function drawMinimap(){
-      const sx = mm.width / world.w; const sy = mm.height / world.h;
-      ctx.clearRect(0,0,mm.width, mm.height);
-      // border
-      ctx.globalAlpha = 1; ctx.strokeStyle = '#8ea0ff'; ctx.strokeRect(0.5,0.5,mm.width-1,mm.height-1);
+      mmctx.clearRect(0,0,mm.width, mm.height);
+      // border/background
+      mmctx.fillStyle = '#041026'; mmctx.fillRect(0,0,mm.width, mm.height);
+      mmctx.strokeStyle = '#6b7cff'; mmctx.strokeRect(0.5,0.5,mm.width-1,mm.height-1);
+      const sx = mm.width / world.w, sy = mm.height / world.h;
       // planets
       for(const p of planets){
         const P = worldPos(p.el);
-        ctx.beginPath();
-        ctx.fillStyle = p.scanned ? '#56ffa3' : '#ffffff';
-        ctx.arc(P.x*sx, P.y*sy, Math.max(1.6, (p.el.offsetWidth/12)*sx), 0, Math.PI*2);
-        ctx.fill();
+        mmctx.beginPath();
+        mmctx.fillStyle = p.scanned ? '#56ffa3' : '#fff';
+        mmctx.arc(P.x*sx, P.y*sy, Math.max(1.2, (p.el.offsetWidth/14)*sx), 0, Math.PI*2);
+        mmctx.fill();
       }
       // ship
-      ctx.beginPath(); ctx.fillStyle = '#7df9ff'; ctx.arc(pos.x*sx, pos.y*sy, 3, 0, Math.PI*2); ctx.fill();
+      mmctx.beginPath(); mmctx.fillStyle = '#7df9ff'; mmctx.arc(pos.x*sx, pos.y*sy, 3, 0, Math.PI*2); mmctx.fill();
     }
 
-    // Initialize
-    window.addEventListener('resize', centerCamera);
-    centerCamera();
-    requestAnimationFrame(loop);
-
-    // Click planets with mouse as well
-    planets.forEach(p=>{
-      p.el.addEventListener('click', ()=>{
-        if(dist(worldPos(p.el), pos) < worldPos(p.el).r + 120){
-          openModal(p);
-        } else {
-          // fly-to assist: nudge ship speed toward planet
-          const P = worldPos(p.el);
-          const dx = P.x - pos.x, dy = P.y - pos.y;
-          const len = Math.hypot(dx,dy)||1; speed.x += (dx/len)*2; speed.y += (dy/len)*2;
-        }
-      });
+    /* ---------- Splash & control guide hide ---------- */
+    // Hide the control guide after the splash animation finishes
+    splash.addEventListener('animationend', ()=>{
+      // remove the splash from flow and hide control guide
+      splash.style.display = 'none';
+      if(controlGuide) controlGuide.classList.add('hidden');
     });
 
+    /* ---------- Planet click previously opened modal - handled above ---------- */
+
+    /* ---------- Misc helpers ---------- */
+    // Make sure modal can be closed with Escape
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape' && modal.style.display === 'flex') closeModalFn();
+    });
+
+    // initial minimap draw
+    drawMinimap();
   </script>
 </body>
 </html>
